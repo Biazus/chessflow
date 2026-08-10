@@ -1,0 +1,73 @@
+.move-list {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.move-list h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.moves-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.move-pair {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.move-number {
+  font-weight: 600;
+  color: #7f8c8d;
+  min-width: 30px;
+}
+
+.move-button {
+  padding: 0.4rem 0.6rem;
+  background-color: #ecf0f1;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  color: #2c3e50;
+}
+
+.move-button:hover {
+  background-color: #d5dbdb;
+  border-color: #95a5a6;
+}
+
+.move-button.active {
+  background-color: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+/* Scrollbar customizado */
+.move-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.move-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.move-list::-webkit-scrollbar-thumb {
+  background: #bdc3c7;
+  border-radius: 4px;
+}
+
+.move-list::-webkit-scrollbar-thumb:hover {
+  background: #95a5a6;
+}
