@@ -1,61 +1,67 @@
-import { useState, useEffect } from 'react'
+// frontend/src/pages/GameDetail.tsx
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import { ChessboardComponent } from '../components/Chessboard'
 import { MoveList } from '../components/MoveList'
-import { GameService } from '../services/gameService'
-import api from '../services/api'
+import { AnalysisPanel } from '../components/AnalysisPanel'
+import { GameService, PositionDto, PositionAnalysis } from '../services/gameService'
+import { AnalysisCache } from '../services/analysisCache'
+import api, { triggerGameAnalysis, getGameAnalysis } from '../services/api'
 import './GameDetail.css'
 
 interface Game {
   id: number
-  white_player: string
-  black_player: string
-  event: string
-  date: string
+  white_player: string | null
+  black_player: string | null
   result: string
+  eco_code: string | null
+  opening_name: string | null
   pgn: string
-  created_at: string
+  imported_at: string
+  played_at: string | null
+  positions: PositionDto[]
 }
+
+type AnalysisStatus = 'idle' | 'pending' | 'analyzing' | 'completed' | 'failed'
+
+const POLL_INTERVAL_MS = 2000
 
 export const GameDetail: React.FC = () => {
   const { gameId } = useParams<{ gameId: string }>()
   const navigate = useNavigate()
+
   const [game, setGame] = useState<Game | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [fenSequence, setFenSequence] = useState<string[]>([])
+
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0)
-  const [moves, setMoves] = useState<string[]>([])
+  const [positionAnalyses, setPositionAnalyses] = useState<PositionAnalysis[]>([])
+  const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>('idle')
+
+  const pollRef = useRef<number | null>(null)
 
   useEffect(() => {
     loadGame()
   }, [gameId])
 
   useEffect(() => {
-    if (game) {
-      const fens = GameService.getFENSequence(game.pgn)
-      setFenSequence(fens)
-      setCurrentMoveIndex(0)
+    if (!game) return
 
-      // Extrair movimentos em notação algébrica
-      const moveRegex = /(\d+)\.\s+(\S+)\s+(\S+)?/g
-      const extractedMoves: string[] = []
-      let match
+    const cached = AnalysisCache.load(game.id, game.pgn)
+    if (cached && cached.length === game.positions.length) {
+      setPositionAnalyses(cached)
+      setAnalysisStatus('completed')
+      return
+    }
 
-      const cleanPGN = game.pgn
-        .replace(/|$$.*?$$|/g, '')
-        .replace(/\{.*?\}/g, '')
-        .trim()
+    startAnalysisFlow(game)
 
-      while ((match = moveRegex.exec(cleanPGN)) !== null) {
-        extractedMoves.push(match[2])
-        if (match[3]) {
-          extractedMoves.push(match[3])
-        }
+    return () => {
+      if (pollRef.current) {
+        window.clearInterval(pollRef.current)
+        pollRef.current = null
       }
-
-      setMoves(extractedMoves)
     }
   }, [game])
 
@@ -65,7 +71,7 @@ export const GameDetail: React.FC = () => {
     try {
       const response = await api.get(`/api/games/${gameId}`)
       setGame(response.data)
-    } catch (err: any) {
+    } catch (err) {
       setError('Erro ao carregar partida')
       console.error(err)
     } finally {
@@ -73,29 +79,90 @@ export const GameDetail: React.FC = () => {
     }
   }
 
-  const handleMoveClick = (index: number) => {
-    setCurrentMoveIndex(index)
-  }
-
-  const handleNextMove = () => {
-    if (currentMoveIndex < fenSequence.length - 1) {
-      setCurrentMoveIndex(currentMoveIndex + 1)
+  const mergeAnalysisResult = (g: Game, analyses: PositionAnalysis[], status: AnalysisStatus) => {
+    setPositionAnalyses(analyses)
+    setAnalysisStatus(status)
+    if (status === 'completed') {
+      AnalysisCache.save(g.id, g.pgn, analyses)
     }
   }
 
-  const handlePreviousMove = () => {
-    if (currentMoveIndex > 0) {
-      setCurrentMoveIndex(currentMoveIndex - 1)
+  const startPolling = (g: Game) => {
+    if (pollRef.current) return
+    pollRef.current = window.setInterval(async () => {
+      try {
+        const response = await getGameAnalysis(g.id)
+        const { status, analyses } = response.data
+        mergeAnalysisResult(g, analyses, status)
+
+        if (status === 'completed' || status === 'failed') {
+          if (pollRef.current) {
+            window.clearInterval(pollRef.current)
+            pollRef.current = null
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao consultar status da análise', err)
+      }
+    }, POLL_INTERVAL_MS)
+  }
+
+  const startAnalysisFlow = async (g: Game) => {
+    try {
+      const response = await getGameAnalysis(g.id)
+      const { status, analyses } = response.data
+
+      if (status === 'completed') {
+        mergeAnalysisResult(g, analyses, 'completed')
+        return
+      }
+
+      setPositionAnalyses(analyses)
+      setAnalysisStatus(status)
+
+      if (status === 'analyzing') {
+        startPolling(g)
+        return
+      }
+
+      // status pending (nunca disparado) ou failed (tentar de novo)
+      await triggerGameAnalysis(g.id)
+      setAnalysisStatus('pending')
+      startPolling(g)
+    } catch (err) {
+      console.error('Erro ao iniciar análise da partida', err)
+      setAnalysisStatus('failed')
     }
   }
 
-  const handleFirstMove = () => {
-    setCurrentMoveIndex(0)
+  const handleRetryAnalysis = () => {
+    if (game) startAnalysisFlow(game)
   }
 
-  const handleLastMove = () => {
-    setCurrentMoveIndex(fenSequence.length - 1)
-  }
+  const fenSequence = useMemo(
+    () => (game ? GameService.buildFenSequence(game.positions) : ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1']),
+    [game]
+  )
+  const moves = useMemo(
+    () => (game ? GameService.buildMoveList(game.positions) : []),
+    [game]
+  )
+
+  const currentFen = fenSequence[currentMoveIndex] || fenSequence[0]
+  // positionAnalyses[i] corresponde a fenSequence[i + 1] (a posição inicial,
+  // índice 0, não tem análise associada).
+  const currentAnalysis = currentMoveIndex > 0 ? positionAnalyses[currentMoveIndex - 1] : undefined
+
+  const analyzedCount = positionAnalyses.filter(
+    (p) => p.evaluation !== null || p.is_mate !== null
+  ).length
+  const totalCount = positionAnalyses.length || game?.positions.length || 0
+
+  const handleMoveClick = (index: number) => setCurrentMoveIndex(index + 1)
+  const handleNextMove = () => setCurrentMoveIndex((i) => Math.min(i + 1, fenSequence.length - 1))
+  const handlePreviousMove = () => setCurrentMoveIndex((i) => Math.max(i - 1, 0))
+  const handleFirstMove = () => setCurrentMoveIndex(0)
+  const handleLastMove = () => setCurrentMoveIndex(fenSequence.length - 1)
 
   if (isLoading) {
     return (
@@ -120,8 +187,6 @@ export const GameDetail: React.FC = () => {
     )
   }
 
-  const currentFen = fenSequence[currentMoveIndex] || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-
   return (
     <div className="game-detail">
       <Navbar />
@@ -133,7 +198,7 @@ export const GameDetail: React.FC = () => {
 
         <div className="game-detail-header">
           <h2>
-            {game.white_player} vs {game.black_player}
+            {game.white_player || 'Unknown'} vs {game.black_player || 'Unknown'}
           </h2>
           <span className={`result result-${game.result.replace(/[\/\-]/g, '')}`}>
             {game.result}
@@ -142,22 +207,45 @@ export const GameDetail: React.FC = () => {
 
         <div className="game-detail-info">
           <div className="info-item">
-            <strong>Evento:</strong>
-            <span>{game.event || 'N/A'}</span>
+            <strong>Abertura:</strong>
+            <span>{game.opening_name || 'N/A'}</span>
           </div>
           <div className="info-item">
-            <strong>Data:</strong>
-            <span>{game.date || 'N/A'}</span>
+            <strong>ECO:</strong>
+            <span>{game.eco_code || 'N/A'}</span>
+          </div>
+          <div className="info-item">
+            <strong>Data da partida:</strong>
+            <span>{game.played_at ? new Date(game.played_at).toLocaleDateString() : 'N/A'}</span>
           </div>
           <div className="info-item">
             <strong>Importado:</strong>
-            <span>{new Date(game.created_at).toLocaleDateString()}</span>
+            <span>{new Date(game.imported_at).toLocaleDateString()}</span>
           </div>
         </div>
 
+        {(analysisStatus === 'pending' || analysisStatus === 'analyzing') && (
+          <div className="analysis-banner analysis-banner-processing">
+            Analisando a partida... {analyzedCount}/{totalCount} posições avaliadas
+          </div>
+        )}
+
+        {analysisStatus === 'failed' && (
+          <div className="analysis-banner analysis-banner-error">
+            Falha ao analisar a partida.{' '}
+            <button onClick={handleRetryAnalysis} className="btn-retry-analysis">
+              Tentar novamente
+            </button>
+          </div>
+        )}
+
         <div className="game-board-section">
           <div className="board-column">
-            <ChessboardComponent fen={currentFen} readOnly={true} />
+            <ChessboardComponent
+              fen={currentFen}
+              readOnly={true}
+              bestMove={currentAnalysis?.best_move}
+            />
 
             <div className="board-controls">
               <button onClick={handleFirstMove} className="control-btn" title="Início">
@@ -181,8 +269,19 @@ export const GameDetail: React.FC = () => {
           <div className="moves-column">
             <MoveList
               moves={moves}
-              currentMoveIndex={currentMoveIndex}
+              currentMoveIndex={currentMoveIndex - 1}
               onMoveClick={handleMoveClick}
+            />
+            <AnalysisPanel
+              evaluation={currentAnalysis?.evaluation ?? null}
+              isMate={currentAnalysis?.is_mate ?? null}
+              topMoves={currentAnalysis?.top_moves ?? []}
+              bestMove={currentAnalysis?.best_move ?? null}
+              isLoading={
+                currentMoveIndex > 0 &&
+                !currentAnalysis &&
+                (analysisStatus === 'pending' || analysisStatus === 'analyzing')
+              }
             />
           </div>
         </div>
@@ -193,7 +292,6 @@ export const GameDetail: React.FC = () => {
         </div>
 
         <div className="game-actions">
-          <button className="btn-analyze">Analisar Partida</button>
           <button className="btn-export">Exportar PGN</button>
         </div>
       </div>

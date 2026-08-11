@@ -35,4 +35,12 @@ export const analyzePosition = async (fen: string, depth: number = 20) => {
   return api.post('/api/analysis/position', { fen, depth })
 }
 
+export const triggerGameAnalysis = async (gameId: number) => {
+  return api.post(`/api/analysis/game/${gameId}`)
+}
+
+export const getGameAnalysis = async (gameId: number) => {
+  return api.get(`/api/analysis/game/${gameId}`)
+}
+
 export default api

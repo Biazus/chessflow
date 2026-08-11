@@ -1,6 +1,6 @@
 import './AnalysisPanel.css'
 
-interface TopMove {
+export interface TopMove {
   Move: string
   Centipawn: number
   Mate: number | null
@@ -21,32 +21,32 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
   bestMove,
   isLoading,
 }) => {
-  const getEvaluationColor = (eval: number | null) => {
-    if (eval === null) return '#95a5a6'
-    if (eval > 300) return '#27ae60' // Branco vencendo
-    if (eval > 100) return '#2ecc71' // Branco melhor
-    if (eval > -100) return '#f39c12' // Equilibrado
-    if (eval > -300) return '#e67e22' // Preto melhor
+  const getEvaluationColor = (evalScore: number | null) => {
+    if (evalScore === null) return '#95a5a6'
+    if (evalScore > 300) return '#27ae60' // Branco vencendo
+    if (evalScore > 100) return '#2ecc71' // Branco melhor
+    if (evalScore > -100) return '#f39c12' // Equilibrado
+    if (evalScore > -300) return '#e67e22' // Preto melhor
     return '#c0392b' // Preto vencendo
   }
 
-  const formatEvaluation = (eval: number | null, mate: number | null) => {
+  const formatEvaluation = (evalScore: number | null, mate: number | null) => {
     if (mate !== null) {
       return `M${Math.abs(mate)}`
     }
-    if (eval === null) return '-'
-    return (eval / 100).toFixed(1)
+    if (evalScore === null) return '-'
+    return (evalScore / 100).toFixed(1)
   }
 
-  const getEvaluationLabel = (eval: number | null, mate: number | null) => {
+  const getEvaluationLabel = (evalScore: number | null, mate: number | null) => {
     if (mate !== null) {
       return mate > 0 ? 'Branco vence' : 'Preto vence'
     }
-    if (eval === null) return 'Sem análise'
-    if (eval > 300) return 'Branco vencendo'
-    if (eval > 100) return 'Branco melhor'
-    if (eval > -100) return 'Equilibrado'
-    if (eval > -300) return 'Preto melhor'
+    if (evalScore === null) return 'Sem análise'
+    if (evalScore > 300) return 'Branco vencendo'
+    if (evalScore > 100) return 'Branco melhor'
+    if (evalScore > -100) return 'Equilibrado'
+    if (evalScore > -300) return 'Preto melhor'
     return 'Preto vencendo'
   }
 

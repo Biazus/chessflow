@@ -38,6 +38,28 @@ services:
       - chessflow_network
     restart: unless-stopped
 
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chessflow_celery_worker
+    environment:
+      DATABASE_URL: postgresql://chessflow_user:chessflow_password@db:5432/chessflow_db
+      REDIS_URL: redis://redis:6379
+      STOCKFISH_PATH: /usr/games/stockfish
+      ENVIRONMENT: development
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - chessflow_network
+    restart: unless-stopped
+    command: celery -A app.celery_app.celery_app worker --loglevel=info
+
   backend:
     build:
       context: ./backend

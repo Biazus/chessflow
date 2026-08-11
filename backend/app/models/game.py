@@ -31,4 +31,4 @@ class Game(Base):
     analysis_status = Column(String, default="pending")  # pending, analyzing, completed, failed TODO melhorar
 
     user = relationship("User", back_populates="games")
-    positions = relationship("Position", back_populates="game", cascade="all, delete-orphan")
+    positions = relationship("Position", back_populates="game", cascade="all, delete-orphan", order_by="Position.move_number")

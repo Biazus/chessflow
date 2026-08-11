@@ -25,3 +25,18 @@ class AnalysisResponse(AnalysisBase):
 
     class Config:
         from_attributes = True
+
+class PositionAnalysisResponse(BaseModel):
+    move_number: int
+    move_san: str
+    fen: str
+    evaluation: Optional[float] = None
+    is_mate: Optional[int] = None
+    best_move: Optional[str] = None
+    top_moves: Optional[List[Dict[str, Any]]] = None
+
+class GameAnalysisStatusResponse(BaseModel):
+    status: str  # pending | analyzing | completed | failed
+    total_positions: int
+    analyzed_positions: int
+    analyses: List[PositionAnalysisResponse]

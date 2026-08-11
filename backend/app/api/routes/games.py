@@ -111,6 +111,12 @@ async def get_game(
             detail="Partida não encontrada"
         )
 
+    # Garante a ordem correta dos lances/posições sem depender
+    # da ordem de inserção no banco
+    game.positions = db.query(Position).filter(
+        Position.game_id == game.id
+    ).order_by(Position.move_number.asc()).all()
+
     return game
 
 @router.delete("/{game_id}", status_code=status.HTTP_204_NO_CONTENT)

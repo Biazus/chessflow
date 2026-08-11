@@ -2,12 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
+from app.models.game import Game
 from app.models.position import Position
 from app.models.analysis import Analysis
-from app.schemas.analysis import AnalysisCreate, AnalysisResponse
+from app.schemas.analysis import AnalysisCreate, AnalysisResponse, GameAnalysisStatusResponse
 from app.services.chess_engine import ChessEngineService
 from app.services.game_parser import GameParserService
 from app.api.dependencies import get_current_user
+from app.tasks.analysis_tasks import analyze_game_task
+from app.config import get_settings
+
+settings = get_settings()
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
@@ -29,7 +34,7 @@ async def analyze_position(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="FEN inválida"
         )
-
+    print("DEPTH: ", analysis_data)
     try:
         result = engine_service.analyze_position(analysis_data.fen, analysis_data.depth)
 
@@ -94,90 +99,74 @@ async def get_analysis(
 
     return analysis
 
-@router.post("/game/{game_id}")
-async def analyze_game(
+
+@router.post("/game/{game_id}", status_code=202)
+async def trigger_game_analysis(
     game_id: int,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    depth: int = 20
+    current_user: User = Depends(get_current_user),
 ):
-    """
-    Analisa todas as posições de uma partida
-    Nota: Implementação síncrona. Logo farei assíncrona com Celery TODO
-    """
-    from app.models.game import Game
+    game = (
+        db.query(Game)
+        .filter(Game.id == game_id, Game.user_id == current_user.id)
+        .first()
+    )
+    if game is None:
+        raise HTTPException(status_code=404, detail="Partida não encontrada")
 
-    game = db.query(Game).filter(
-        Game.id == game_id,
-        Game.user_id == current_user.id
-    ).first()
+    if game.analysis_status in ("analyzing", "completed"):
+        return {"status": game.analysis_status}
 
-    if not game:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Partida não encontrada"
-        )
+    game.analysis_status = "pending"
+    db.commit()
 
-    try:
-        positions = db.query(Position).filter(
-            Position.game_id == game_id
-        ).all()
+    analyze_game_task.delay(game_id, settings.DEFAULT_ANALYSIS_DEPTH)
+    return {"status": "pending"}
 
-        analyzed_count = 0
 
-        for position in positions:
-            # Verificar se já foi analisada
-            existing_analysis = db.query(Analysis).filter(
-                Analysis.position_id == position.id
-            ).first()
+@router.get("/game/{game_id}", response_model=GameAnalysisStatusResponse)
+async def get_game_analysis(
+    game_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    game = (
+        db.query(Game)
+        .filter(Game.id == game_id, Game.user_id == current_user.id)
+        .first()
+    )
+    if game is None:
+        raise HTTPException(status_code=404, detail="Partida não encontrada")
 
-            if existing_analysis:
-                analyzed_count += 1
-                continue
+    positions = (
+        db.query(Position)
+        .filter(Position.game_id == game_id)
+        .order_by(Position.move_number)
+        .all()
+    )
+    analyses = (
+        db.query(Analysis)
+        .filter(Analysis.position_id.in_([p.id for p in positions]))
+        .all()
+    )
+    by_position = {a.position_id: a for a in analyses}
 
-            result = engine_service.analyze_position(position.fen, depth)
-
-            if result["success"]:
-                evaluation = result["evaluation"]
-                eval_value = None
-                is_mate = None
-
-                if evaluation:
-                    if "value" in evaluation:
-                        eval_value = evaluation["value"]
-                    if "mate" in evaluation:
-                        is_mate = evaluation["mate"]
-
-                analysis = Analysis(
-                    user_id=current_user.id,
-                    position_id=position.id,
-                    depth=depth,
-                    best_move=result["best_move"],
-                    evaluation=eval_value,
-                    is_mate=is_mate,
-                    top_moves=result["top_moves"],
-                    processing_time=result["processing_time"]
-                )
-
-                db.add(analysis)
-                analyzed_count += 1
-
-        db.commit()
-
-        game.analysis_status = "completed"
-        db.commit()
-
-        return {
-            "status": "completed",
-            "game_id": game_id,
-            "positions_analyzed": analyzed_count,
-            "total_positions": len(positions),
-            "message": f"{analyzed_count} posições analisadas"
+    results = [
+        {
+            "move_number": p.move_number,
+            "move_san": p.move_san,
+            "fen": p.fen,
+            "evaluation": by_position[p.id].evaluation if p.id in by_position else None,
+            "is_mate": by_position[p.id].is_mate if p.id in by_position else None,
+            "best_move": by_position[p.id].best_move if p.id in by_position else None,
+            "top_moves": by_position[p.id].top_moves if p.id in by_position else None,
         }
+        for p in positions
+    ]
 
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao analisar partida: {str(e)}"
-        )
+    return {
+        "status": game.analysis_status,
+        "total_positions": len(positions),
+        "analyzed_positions": len(analyses),
+        "analyses": results,
+    }

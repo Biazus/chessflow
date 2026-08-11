@@ -110,6 +110,7 @@
 .moves-column {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
 
 .board-controls {
@@ -217,4 +218,33 @@
   text-align: center;
   padding: 2rem;
   color: #7f8c8d;
+}
+
+.analysis-banner {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.analysis-banner-processing {
+  background-color: #fef5e7;
+  color: #b7791f;
+}
+
+.analysis-banner-error {
+  background-color: #fadbd8;
+  color: #c0392b;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-retry-analysis {
+  background-color: #c0392b;
+  color: white;
+  border: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
 }
