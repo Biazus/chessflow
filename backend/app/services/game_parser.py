@@ -47,7 +47,9 @@ class GameParserService:
             # Limpar headers padrão do chess.pgn
             white_player = game.headers.get("White", "Unknown")
             black_player = game.headers.get("Black", "Unknown")
-            date = game.headers.get("Date", None)
+            date = game.headers.get("EventDate", None)
+
+            event = game.headers.get("Event", None)
 
             # chess.pgn preenche com "?" quando falta header
             if white_player == "?":
@@ -62,6 +64,7 @@ class GameParserService:
                 "black_player": black_player,
                 "result": result,
                 "moves": moves,
+                "event": event,
                 "eco_code": eco_code,
                 "opening_name": opening_name,
                 "pgn": pgn_text,

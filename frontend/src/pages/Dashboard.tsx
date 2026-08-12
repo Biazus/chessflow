@@ -148,7 +148,7 @@ export const Dashboard: React.FC = () => {
                         <strong>Data:</strong> {game.date || 'N/A'}
                       </p>
                       <p>
-                        <strong>Importado:</strong> {new Date(game.created_at).toLocaleDateString()}
+                        <strong>Importado:</strong> {new Date(game.imported_at).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="game-action">

@@ -21,6 +21,10 @@ class GameResponse(GameBase):
     eco_code: Optional[str] = None
     opening_name: Optional[str] = None
     moves: Optional[List[str]] = None
+    event: Optional[str] = None
+    white_player: Optional[str] = None
+    black_player: Optional[str] = None
+    played_at: Optional[datetime] = None
     analysis_status: str
     imported_at: datetime
 

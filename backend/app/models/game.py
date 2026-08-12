@@ -22,6 +22,7 @@ class Game(Base):
     result = Column(Enum(GameResult), default=GameResult.UNKNOWN)
     eco_code = Column(String, nullable=True, index=True)  # Classificação de abertura
     opening_name = Column(String, nullable=True)
+    event = Column(String, nullable=True)
 
     # Movimentos em formato JSON para queries rápidas
     moves = Column(JSON, nullable=True)  # ["e2e4", "c7c5", ...]

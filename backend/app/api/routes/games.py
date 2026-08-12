@@ -38,6 +38,7 @@ async def import_pgn(
             game = Game(
                 user_id=current_user.id,
                 pgn=game_data["pgn"],
+                event=game_data["event"],
                 white_player=game_data["white_player"],
                 black_player=game_data["black_player"],
                 result=game_data["result"],
