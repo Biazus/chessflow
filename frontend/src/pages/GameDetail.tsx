@@ -209,39 +209,41 @@ export const GameDetail: React.FC = () => {
       <Navbar />
 
       <div className="game-detail-container">
-        <button onClick={() => navigate('/dashboard')} className="btn-back">
-          ← Voltar
-        </button>
+        <div className="game-header-row">
+  <button onClick={() => navigate('/dashboard')} className="btn-back">
+    ← Voltar
+  </button>
 
-        <div className="game-summary-card">
-          <div className="game-summary-title">
-            <h2>
-              {game.white_player || 'Unknown'} vs {game.black_player || 'Unknown'}
-            </h2>
-            <span className={`result result-${game.result.replace(/[\/\-]/g, '')}`}>
-              {game.result}
-            </span>
-          </div>
+  <div className="game-summary-card">
+    <div className="game-summary-title">
+      <h2>
+        {game.white_player || 'Unknown'} vs {game.black_player || 'Unknown'}
+      </h2>
+      <span className={`result result-${game.result.replace(/[\/\-]/g, '')}`}>
+        {game.result}
+      </span>
+    </div>
 
-          <div className="game-summary-meta">
-            <span>
-              <strong>Abertura:</strong> {game.opening_name || 'N/A'}
-            </span>
-            <span>
-              <strong>ECO:</strong> {game.eco_code || 'N/A'}
-            </span>
-            <span>
-              <strong>Data:</strong>{' '}
-              {game.played_at ? new Date(game.played_at).toLocaleDateString() : 'N/A'}
-            </span>
-            <span>
-              <strong>Importado:</strong> {new Date(game.imported_at).toLocaleDateString()}
-            </span>
-            <button className="btn-pgn-link" onClick={() => setIsPgnModalOpen(true)}>
-              Ver PGN original
-            </button>
-          </div>
-        </div>
+    <div className="game-summary-meta">
+      <span>
+        <strong>Abertura:</strong> {game.opening_name || 'N/A'}
+      </span>
+      <span>
+        <strong>ECO:</strong> {game.eco_code || 'N/A'}
+      </span>
+      <span>
+        <strong>Data:</strong>{' '}
+        {game.played_at ? new Date(game.played_at).toLocaleDateString() : 'N/A'}
+      </span>
+      <span>
+        <strong>Importado:</strong> {new Date(game.imported_at).toLocaleDateString()}
+      </span>
+      <button className="btn-pgn-link" onClick={() => setIsPgnModalOpen(true)}>
+        Ver PGN original
+      </button>
+    </div>
+  </div>
+</div>
 
         {(analysisStatus === 'pending' || analysisStatus === 'analyzing') && (
           <div className="analysis-banner analysis-banner-processing">

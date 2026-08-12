@@ -1,6 +1,9 @@
 .chessboard-container {
   display: flex;
   justify-content: center;
+  align-items: center;
+  width: fit-content;
+  margin: 0 auto;
   padding: 1rem;
   background: white;
   border-radius: 8px;
@@ -12,3 +15,4 @@
     padding: 0.5rem;
   }
 }
+

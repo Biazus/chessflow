@@ -1,32 +1,40 @@
 .moves-container {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  max-height: 150px;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-height: 220px;
   overflow-y: auto;
   padding-right: 0.25rem;
 }
 
 .move-pair {
-  display: flex;
-  gap: 0.2rem;
+  display: grid;
+  grid-template-columns: 24px 1fr 1fr;
+  gap: 0.3rem;
   align-items: center;
+}
+
+.move-pair:nth-child(even) {
+  background-color: #f9f9fb;
+  border-radius: 4px;
 }
 
 .move-number {
   font-weight: 600;
   color: #7f8c8d;
-  min-width: 22px;
   font-size: 0.78rem;
+  padding-left: 0.2rem;
 }
 
 .move-button {
-  padding: 0.25rem 0.45rem;
+  width: 100%;
+  padding: 0.25rem 0.4rem;
   background-color: #ecf0f1;
   border: 1px solid #bdc3c7;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.78rem;
+  text-align: center;
   transition: all 0.2s;
   color: #2c3e50;
 }

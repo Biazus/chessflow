@@ -101,7 +101,8 @@
 
 .game-board-section {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: max-content 1fr;
+  align-items: start;
   gap: 1.25rem;
   margin-bottom: 1.25rem;
 }
@@ -115,22 +116,14 @@
 .board-column {
   display: flex;
   flex-direction: column;
-}
-
-.moves-column {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  align-items: center;
 }
 
 .board-frame {
   display: flex;
   flex-direction: column;
-}
-
-.board-frame .chessboard-container {
-  border-radius: 8px 8px 0 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  align-items: center;
+  width: fit-content;
 }
 
 .board-controls {
@@ -143,7 +136,14 @@
   border-radius: 0 0 8px 8px;
   border-top: 1px solid #ecf0f1;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
+
+.board-frame .chessboard-container {
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 
 .control-btn {
   background-color: #667eea;
@@ -245,4 +245,55 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.85rem;
+}
+
+.moves-column {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.moves-column > .expandable-card {
+  flex: 1 1 280px;
+  min-width: 280px;
+}
+
+@media (max-width: 640px) {
+  .moves-column {
+    flex-direction: column;
+  }
+
+  .moves-column > .expandable-card {
+    width: 100%;
+  }
+}
+
+.game-header-row {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.game-header-row .btn-back {
+  margin-bottom: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-header-row .game-summary-card {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .game-header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

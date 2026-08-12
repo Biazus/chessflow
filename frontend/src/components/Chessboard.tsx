@@ -63,15 +63,15 @@ export const ChessboardComponent: React.FC<ChessboardProps> = ({
   return (
     <div className="chessboard-container">
       <Chessboard
-        position={fen}
-        onPieceDrop={handlePieceDrop}
-        boardWidth={400}
-        customArrows={arrows as any}
-        customBoardStyle={{
-          borderRadius: '4px',
-          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
-        }}
-      />
+  position={fen}
+  onPieceDrop={handlePieceDrop}
+  boardWidth={520}
+  customArrows={arrows as any}
+  customBoardStyle={{
+    borderRadius: '4px',
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+  }}
+/>
     </div>
   )
 }
