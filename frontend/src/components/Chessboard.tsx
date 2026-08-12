@@ -2,11 +2,17 @@ import { Chessboard } from 'react-chessboard'
 import { Chess } from 'chess.js'
 import './Chessboard.css'
 
+interface TopMoveArrow {
+  Move: string
+  Centipawn: number | null
+  Mate: number | null
+}
+
 interface ChessboardProps {
   fen: string
   onMove?: (move: string) => void
   readOnly?: boolean
-  bestMove?: string | null // formato UCI, ex: "e2e4"
+  topMoves?: TopMoveArrow[]
 }
 
 function parseUciMove(uci?: string | null): { from: string; to: string } | null {
@@ -14,11 +20,18 @@ function parseUciMove(uci?: string | null): { from: string; to: string } | null 
   return { from: uci.slice(0, 2), to: uci.slice(2, 4) }
 }
 
+// Cores sólidas (sem alpha), luminosidade decrescente no mesmo tom de verde
+const ARROW_COLORS = [
+  '#14532d', // 1º melhor - verde bem escuro
+  '#22c55e', // 2º melhor - verde médio
+  '#a7f3d0', // 3º melhor - verde bem claro
+]
+
 export const ChessboardComponent: React.FC<ChessboardProps> = ({
   fen,
   onMove,
   readOnly = true,
-  bestMove,
+  topMoves = [],
 }) => {
   const game = new Chess(fen)
 
@@ -38,8 +51,14 @@ export const ChessboardComponent: React.FC<ChessboardProps> = ({
     return false
   }
 
-  const highlight = parseUciMove(bestMove)
-  const arrows = highlight ? [[highlight.from, highlight.to]] : []
+  const arrows = topMoves
+    .slice(0, 3)
+    .map((m, i) => {
+      const parsed = parseUciMove(m.Move)
+      if (!parsed) return null
+      return [parsed.from, parsed.to, ARROW_COLORS[i]] as [string, string, string]
+    })
+    .filter((a): a is [string, string, string] => a !== null)
 
   return (
     <div className="chessboard-container">
@@ -48,7 +67,6 @@ export const ChessboardComponent: React.FC<ChessboardProps> = ({
         onPieceDrop={handlePieceDrop}
         boardWidth={400}
         customArrows={arrows as any}
-        customArrowColor="rgb(21, 128, 61)"
         customBoardStyle={{
           borderRadius: '4px',
           boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',

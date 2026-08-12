@@ -244,7 +244,7 @@ export const GameDetail: React.FC = () => {
             <ChessboardComponent
               fen={currentFen}
               readOnly={true}
-              bestMove={currentAnalysis?.best_move}
+              topMoves={currentAnalysis?.top_moves ?? []}
             />
 
             <div className="board-controls">

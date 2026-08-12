@@ -16,7 +16,7 @@ class ChessEngineService:
                 parameters={
                     "Threads": 4,
                     "Hash": 256,
-                    "MultiPV": 5
+                    "MultiPV": 1
                 }
             )
         except Exception as e:
