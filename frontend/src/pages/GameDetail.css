@@ -6,17 +6,18 @@
 .game-detail-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
 }
 
 .btn-back {
   background-color: #95a5a6;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 0.9rem;
   border-radius: 4px;
   cursor: pointer;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
   transition: background-color 0.3s;
 }
 
@@ -24,28 +25,63 @@
   background-color: #7f8c8d;
 }
 
-.game-detail-header {
+.game-summary-card {
   background: white;
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.game-summary-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
 }
 
-.game-detail-header h2 {
+.game-summary-title h2 {
   margin: 0;
   color: #2c3e50;
-  font-size: 1.5rem;
+  font-size: 1.15rem;
+}
+
+.game-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.25rem;
+  color: #7f8c8d;
+  font-size: 0.85rem;
+}
+
+.game-summary-meta strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.btn-pgn-link {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #667eea;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-pgn-link:hover {
+  text-decoration: underline;
 }
 
 .result {
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 20px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 .result-10 {
@@ -63,36 +99,11 @@
   color: #f39c12;
 }
 
-.game-detail-info {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.info-item strong {
-  color: #2c3e50;
-  margin-bottom: 0.25rem;
-}
-
-.info-item span {
-  color: #7f8c8d;
-}
-
 .game-board-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
 @media (max-width: 1024px) {
@@ -104,23 +115,33 @@
 .board-column {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
 .moves-column {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+.board-frame {
+  display: flex;
+  flex-direction: column;
+}
+
+.board-frame .chessboard-container {
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .board-controls {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   background: white;
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 0.4rem;
+  border-radius: 0 0 8px 8px;
+  border-top: 1px solid #ecf0f1;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -128,10 +149,10 @@
   background-color: #667eea;
   color: white;
   border: none;
-  padding: 0.5rem 0.75rem;
+  padding: 0.35rem 0.6rem;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: background-color 0.3s;
 }
 
@@ -142,34 +163,9 @@
 .move-counter {
   color: #7f8c8d;
   font-weight: 600;
-  min-width: 80px;
+  font-size: 0.85rem;
+  min-width: 70px;
   text-align: center;
-}
-
-.game-pgn-section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-}
-
-.game-pgn-section h3 {
-  margin-top: 0;
-  color: #2c3e50;
-  margin-bottom: 1rem;
-}
-
-.pgn-content {
-  background-color: #f9f9f9;
-  padding: 1rem;
-  border-radius: 4px;
-  border: 1px solid #ecf0f1;
-  overflow-x: auto;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
-  color: #2c3e50;
-  line-height: 1.5;
 }
 
 .game-actions {
@@ -180,11 +176,12 @@
 
 .btn-analyze,
 .btn-export {
-  padding: 0.75rem 1.5rem;
+  padding: 0.6rem 1.25rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.9rem;
   transition: all 0.3s;
 }
 
@@ -221,10 +218,10 @@
 }
 
 .analysis-banner {
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 1rem;
   border-radius: 6px;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
 }
 
 .analysis-banner-processing {
@@ -244,7 +241,8 @@
   background-color: #c0392b;
   color: white;
   border: none;
-  padding: 0.35rem 0.75rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 0.85rem;
 }
